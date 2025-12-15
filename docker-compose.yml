@@ -1,0 +1,10 @@
+services:
+  server:
+    build:
+      context: ./server
+      dockerfile: server.Dockerfile
+    ports:
+      - "3001:3001"
+    volumes:
+      - ./server/db-data:/data
+    restart: always

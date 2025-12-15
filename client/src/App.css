@@ -1,0 +1,12 @@
+#root {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  text-align: left; /* 恢复默认左对齐，而不是居中 */
+  display: flex;    /* 确保根节点也是 flex 布局 */
+  flex-direction: column;
+}
+
+/* 如果你不需要原来的 Vite 旋转 Logo，下面的都可以删掉 */
+/* 保持文件整洁，建议直接清空不需要的样式 */

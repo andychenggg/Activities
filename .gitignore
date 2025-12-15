@@ -1,4 +1,4 @@
 ./idea
-./server/node_modules
-./client/node_modules
-./server/users.seed.json
+server/node_modules
+client/node_modules
+server/users.seed.json
