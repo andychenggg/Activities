@@ -25,6 +25,7 @@ import RemoveCircleOutlineIcon from '@mui/icons-material/RemoveCircleOutline';
 import WarningIcon from '@mui/icons-material/Warning';
 import CallMergeIcon from '@mui/icons-material/CallMerge';
 import ListIcon from '@mui/icons-material/List';
+import EditIcon from '@mui/icons-material/Edit';
 import { useState, useEffect, useRef } from "react"; // ⭐ 引入 useRef, useEffect
 import { api } from "../api/api";
 
@@ -46,6 +47,10 @@ export default function ExpenseTable({ expenses, people, refresh, activity_id, i
     const [submitSummary, setSubmitSummary] = useState({ total: 0, count: 0, samePerson: true });
     const [errorMsg, setErrorMsg] = useState("");
     const [showError, setShowError] = useState(false);
+    const [showSuccess, setShowSuccess] = useState(false);
+    const [editOpen, setEditOpen] = useState(false);
+    const [editLoading, setEditLoading] = useState(false);
+    const [editData, setEditData] = useState({ id: null, person_id: "", amount: "", note: "" });
 
     // --- Effect: 监听行数变化，自动聚焦 ---
     useEffect(() => {
@@ -191,6 +196,44 @@ export default function ExpenseTable({ expenses, people, refresh, activity_id, i
     const expenseToDelete = expenses.find(e => e.id === deleteId);
     const personName = expenseToDelete ? people.find(p => p.id === expenseToDelete.person_id)?.name : "";
 
+    const openEdit = (expense) => {
+        setEditData({
+            id: expense.id,
+            person_id: expense.person_id,
+            amount: expense.amount,
+            note: expense.note || ""
+        });
+        setEditOpen(true);
+    };
+
+    const closeEdit = () => {
+        setEditOpen(false);
+    };
+
+    const confirmEdit = async () => {
+        if (!editData.person_id || Number(editData.amount) <= 0) {
+            setErrorMsg("请输入有效的付款人和金额");
+            setShowError(true);
+            return;
+        }
+        setEditLoading(true);
+        try {
+            await api.updateExpense(editData.id, {
+                person_id: editData.person_id,
+                amount: Number(editData.amount),
+                note: editData.note || ""
+            });
+            setEditOpen(false);
+            refresh();
+            setShowSuccess(true);
+        } catch (e) {
+            setErrorMsg("修改失败，请重试");
+            setShowError(true);
+        } finally {
+            setEditLoading(false);
+        }
+    };
+
     return (
         <>
             <Table sx={{ my: 2, minWidth: isMobile ? 500 : 650 }}>
@@ -215,6 +258,9 @@ export default function ExpenseTable({ expenses, people, refresh, activity_id, i
                                 {e.note || '无备注'}
                             </TableCell>
                             <TableCell>
+                                <IconButton size="small" onClick={() => openEdit(e)} sx={{ color: theme.palette.primary.main }}>
+                                    <EditIcon fontSize="small" />
+                                </IconButton>
                                 <IconButton size="small" onClick={() => handleDeleteClick(e.id)} sx={{ color: theme.palette.error.main }}>
                                     <DeleteIcon fontSize="small" />
                                 </IconButton>
@@ -329,6 +375,46 @@ export default function ExpenseTable({ expenses, people, refresh, activity_id, i
                 </DialogActions>
             </Dialog>
 
+            {/* 编辑支出弹窗 */}
+            <Dialog open={editOpen} onClose={closeEdit} PaperProps={{ sx: { borderRadius: 2, padding: 1, minWidth: 360 } }}>
+                <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <EditIcon color="primary" /> 修改支出
+                </DialogTitle>
+                <DialogContent sx={{ pt: 1 }}>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
+                        <TextField
+                            select
+                            label="付款人"
+                            value={editData.person_id}
+                            onChange={(e) => setEditData(prev => ({ ...prev, person_id: e.target.value }))}
+                        >
+                            {people.map((p) => (
+                                <MenuItem key={p.id} value={p.id}>
+                                    {p.name}
+                                </MenuItem>
+                            ))}
+                        </TextField>
+                        <TextField
+                            label="金额"
+                            type="number"
+                            value={editData.amount}
+                            onChange={(e) => setEditData(prev => ({ ...prev, amount: e.target.value }))}
+                        />
+                        <TextField
+                            label="备注"
+                            value={editData.note}
+                            onChange={(e) => setEditData(prev => ({ ...prev, note: e.target.value }))}
+                        />
+                    </Box>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={closeEdit} color="inherit">取消</Button>
+                    <Button onClick={confirmEdit} variant="contained" color="primary" disabled={editLoading}>
+                        {editLoading ? "保存中..." : "确认修改"}
+                    </Button>
+                </DialogActions>
+            </Dialog>
+
             {/* 提交方式确认弹窗 */}
             <Dialog 
                 open={submitDialogOpen} 
@@ -392,6 +478,18 @@ export default function ExpenseTable({ expenses, people, refresh, activity_id, i
             >
                 <Alert onClose={() => setShowError(false)} severity="error" variant="filled" sx={{ width: '100%' }}>
                     {errorMsg}
+                </Alert>
+            </Snackbar>
+
+            {/* 成功提示 */}
+            <Snackbar
+                open={showSuccess}
+                autoHideDuration={2500}
+                onClose={() => setShowSuccess(false)}
+                anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+            >
+                <Alert onClose={() => setShowSuccess(false)} severity="success" variant="filled" sx={{ width: '100%' }}>
+                    修改成功！
                 </Alert>
             </Snackbar>
         </>

@@ -24,6 +24,7 @@ export const api = {
 
     // --- 原有支出接口 ---
     addExpense: (activity_id, person_id, amount, note) => axios.post(`${API_BASE}/activities/${activity_id}/expenses`, { person_id, amount, note }),
+    updateExpense: (id, data) => axios.put(`${API_BASE}/expenses/${id}`, data),
     deleteExpense: (id) => axios.delete(`${API_BASE}/expenses/${id}`),
 
     // --- 原有统计接口 ---

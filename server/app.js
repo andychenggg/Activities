@@ -490,6 +490,37 @@ app.delete('/expenses/:id', requireLogin, (req, res) => {
     res.json({ success: true });
 });
 
+// 修改支出
+app.put('/expenses/:id', requireLogin, (req, res) => {
+    const expenseId = req.params.id;
+    const { person_id, amount, note } = req.body;
+
+    const personIdNum = Number(person_id);
+    const amountNum = Number(amount);
+    if (!personIdNum || isNaN(amountNum) || amountNum <= 0) {
+        return res.status(400).json({ error: "参数错误" });
+    }
+
+    const expense = db.prepare(`
+        SELECT e.id, e.activity_id
+        FROM expenses e
+        JOIN activities a ON a.id = e.activity_id
+        WHERE e.id = ? AND a.owner_id = ?
+    `).get(expenseId, req.userId);
+
+    if (!expense) {
+        return res.status(404).json({ error: "支出不存在或无权限" });
+    }
+
+    db.prepare(`
+        UPDATE expenses
+        SET person_id = ?, amount = ?, note = ?
+        WHERE id = ?
+    `).run(personIdNum, amountNum, note || "", expenseId);
+
+    res.json({ success: true });
+});
+
 /* ======================================================
    STATISTICS API
    ====================================================== */
