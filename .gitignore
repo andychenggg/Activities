@@ -3,5 +3,6 @@ server/node_modules
 client/node_modules
 server/users.seed.json
 server/backend-bd.log
+server/db-data/
 CLAUDE.md
 .claude/
