@@ -6,3 +6,4 @@ server/backend-bd.log
 server/db-data/
 CLAUDE.md
 .claude/
+config.toml
