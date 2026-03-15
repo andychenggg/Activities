@@ -3,3 +3,5 @@ server/node_modules
 client/node_modules
 server/users.seed.json
 server/backend-bd.log
+CLAUDE.md
+.claude/
